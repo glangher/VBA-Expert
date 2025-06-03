@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn AI Agent v3 - CAPTIVATE - Andrei Glangher</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com" defer></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              DEFAULT: "#0A66C2",
+              light: "#3B82F6",
+              dark: "#084F9A",
+              hover: "#0058AA"
+            },
+            secondary: {
+              DEFAULT: "#1E293B",
+              light: "#334155",
+              dark: "#0F172A",
+              lighter: "#475569"
+            },
+            accent: {
+              DEFAULT: "#F59E0B",
+              light: "#FBBF24",
+              dark: "#D97706",
+              hover: "#B45309"
+            },
+            neutral: {
+              lightest: "#F8FAFC",
+              light: "#E2E8F0",
+              DEFAULT: "#94A3B8",
+              dark: "#64748B",
+              darker: "#334155",
+              darkest: "#020617"
+            },
+            success: { DEFAULT: "#10B981", light: "#34D399", dark: "#059669" },
+            danger: { DEFAULT: "#EF4444", light: "#F87171", dark: "#DC2626" },
+            info: { DEFAULT: "#3B82F6", light: "#60A5FA", dark: "#2563EB" },
+            captivate_c: "#FF6347",
+            captivate_a_auth: "#FFD700",
+            captivate_p: "#ADFF2F",
+            captivate_t_tribal: "#87CEFA",
+            captivate_i: "#EE82EE",
+            captivate_v: "#FFA500",
+            captivate_a_action: "#32CD32",
+            captivate_t_timing: "#40E0D0",
+            captivate_e: "#FF69B4"
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Tailwind directives -->
+  <style type="text/tailwindcss">
+    html.dark {
+      color-scheme: dark;
+    }
+    body {
+      font-family: "Inter", sans-serif;
+      @apply bg-secondary-dark text-neutral-light;
+      scroll-behavior: smooth;
+    }
+    .nav-link {
+      @apply flex items-center px-5 py-3 rounded-lg font-medium text-neutral-light hover:bg-primary-hover hover:text-white transition-all duration-200;
+    }
+    .nav-link.active {
+      @apply bg-primary text-white shadow-lg font-bold;
+    }
+    .nav-link i {
+      @apply mr-3 w-5 text-center text-primary-light group-hover:text-white;
+    }
+    .nav-link.active i {
+      @apply text-white;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .card {
+      @apply bg-secondary rounded-xl shadow-2xl p-6 sm:p-8 mb-8 border border-secondary-light transition-shadow duration-300 hover:shadow-primary/20;
+    }
+    .btn {
+      @apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-semibold transition duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-secondary-dark;
+    }
+    .btn-primary {
+      @apply bg-primary text-white hover:bg-primary-hover focus:ring-primary;
+    }
+    .btn-secondary {
+      @apply bg-secondary-light text-neutral-lightest hover:bg-primary focus:ring-secondary-light;
+    }
+    .btn-accent {
+      @apply bg-accent text-white hover:bg-accent-hover focus:ring-accent;
+    }
+    .btn-danger {
+      @apply bg-danger text-white hover:bg-danger-dark focus:ring-danger;
+    }
+    .form-input,
+    .form-textarea,
+    .form-select {
+      @apply w-full px-5 py-3 rounded-lg bg-secondary-light border-secondary-lighter text-neutral-lightest placeholder-neutral-dark focus:ring-2 focus:ring-primary focus:border-primary transition-colors duration-200 mt-2;
+    }
+    .form-textarea {
+      min-height: 150px;
+    }
+    .form-select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394A3B8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      padding-right: 3rem;
+      appearance: none;
+    }
+    .modal {
+      @apply fixed inset-0 z-50 hidden bg-black/75 flex items-center justify-center;
+    }
+    .modal-content {
+      @apply bg-secondary border border-secondary-light shadow-2xl rounded-lg text-neutral-light p-6 w-11/12 max-w-md;
+    }
+    .close-button {
+      @apply text-neutral-dark hover:text-neutral-lightest transition-colors;
+    }
+    .spinner {
+      border: 4px solid rgba(248, 250, 252, 0.2);
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      border-left-color: theme("colors.primary.DEFAULT");
+      animation: spin 1s ease infinite;
+      display: none;
+      margin: 1.25rem auto;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    .main-header {
+      background: linear-gradient(
+        145deg,
+        theme("colors.primary.dark") 0%,
+        theme("colors.primary.DEFAULT") 100%
+      );
+      @apply text-white p-6 sm:p-8 mb-8 rounded-xl shadow-xl;
+    }
+    .stat-card {
+      @apply bg-secondary p-5 rounded-xl shadow-lg text-center border border-secondary-light hover:border-primary transition-all;
+    }
+    .stat-card-title {
+      @apply text-sm font-medium text-neutral;
+    }
+    .stat-card-value {
+      @apply text-3xl font-bold text-primary-light mt-1.5;
+    }
+    .captivate-badge {
+      @apply text-xs font-semibold mr-2 mb-2 px-3 py-1 rounded-full inline-block transition-all;
+    }
+    .captivate-badge-inactive {
+      @apply bg-secondary-light text-neutral-dark border border-neutral-dark/50;
+    }
+    .captivate-component-card {
+      @apply p-5 rounded-xl shadow-lg mb-4 bg-secondary-light border border-secondary-lighter transition-all hover:shadow-xl relative overflow-hidden;
+    }
+    .captivate-component-card h4 {
+      @apply text-xl font-semibold mb-1.5;
+    }
+    .captivate-component-card p {
+      @apply text-sm text-neutral-light leading-relaxed;
+    }
+    .section-title {
+      @apply text-3xl sm:text-4xl font-bold mb-8 text-neutral-lightest border-b-2 border-primary pb-3;
+    }
+    .subsection-title {
+      @apply text-2xl font-semibold mb-6 text-primary-light;
+    }
+  </style>
+</head>
+<body class="bg-secondary-dark text-neutral-light">
+  <div class="flex flex-col md:flex-row h-screen">
+    <aside class="w-full md:w-72 bg-secondary shadow-2xl p-5 space-y-3 overflow-y-auto shrink-0">
+      <div class="text-center py-4 mb-4">
+        <h1 class="text-2xl font-bold text-primary">LinkedIn AI Agent</h1>
+        <p class="text-sm text-neutral">Andrei Glangher</p>
+      </div>
+      <nav class="space-y-2">
+        <a href="#" role="button" class="nav-link active group" data-target="dashboard">
+          <i class="fas fa-tachometer-alt fa-fw" aria-hidden="true"></i>
+          Dashboard
+        </a>
+        <a href="#" role="button" class="nav-link group" data-target="content-generation">
+          <i class="fas fa-magic-wand-sparkles fa-fw" aria-hidden="true"></i>
+          AI Content Generation
+        </a>
+        <a href="#" role="button" class="nav-link group" data-target="captivate-engagement-suite">
+          <i class="fas fa-bullseye fa-fw" aria-hidden="true"></i>
+          CAPTIVATE &amp; Engagement
+        </a>
+        <div class="mt-6 pt-4 border-t border-secondary-light">
+          <p class="text-xs text-neutral">User ID: <span id="userIdDisplay" class="font-mono block truncate">N/A</span></p>
+          <p class="text-xs text-neutral mt-1">App ID: <span id="appIdDisplay" class="font-mono block truncate">N/A</span></p>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6 md:p-10 overflow-y-auto bg-secondary-dark">
+      <header class="main-header">
+        <div class="flex items-center">
+          <i class="fab fa-linkedin text-4xl mr-4" aria-hidden="true"></i>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-semibold">Strategic LinkedIn AI Agent</h1>
+            <p class="mt-1 text-sm opacity-80">Maximizing LinkedIn Impact for Andrei Glangher</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard" class="content-section active">
+        <h2 class="section-title">Central Dashboard</h2>
+        <div class="grid grid-cols-1 gap-6">
+          <div class="card">
+            <h3 class="text-xl font-semibold mb-3 text-primary-light">Welcome, Andrei!</h3>
+            <p class="text-neutral-light leading-relaxed">This is your control panel for the LinkedIn AI Agent v3, now enhanced with the CAPTIVATE framework. Generate impactful posts, analyze them through the CAPTIVATE lens, and optimize your engagement strategy.</p>
+          </div>
+        </div>
+        <div class="mt-10">
+          <h3 class="subsection-title">Generated Post Statistics</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="stat-card">
+              <div class="stat-card-title">Total Posts Created</div>
+              <div id="statsTotalPosts" class="stat-card-value">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-title">Avg. CAPTIVATE Score</div>
+              <div id="statsAvgCaptivateScore" class="stat-card-value">0/9</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-title">Avg. Viral Potential</div>
+              <div id="statsAvgViralPotential" class="stat-card-value">0%</div>
+            </div>
+          </div>
+          <p class="text-xs text-neutral mt-6 text-center">Statistics are based on posts generated and simulated within this agent.</p>
+        </div>
+      </section>
+
+      <!-- CONTENT GENERATION -->
+      <section id="content-generation" class="content-section">
+        <h2 class="section-title">AI Content Generation (with CAPTIVATE)</h2>
+        <div class="card">
+          <p class="text-base text-neutral-light mb-8">This module uses a Gemini AI model to generate post proposals, optimized with the CAPTIVATE framework.</p>
+          <form id="contentGenForm" class="space-y-8">
+            <div>
+              <label for="genPillar" class="block text-md font-medium text-neutral-lightest mb-1.5">1. Main Strategic Pillar</label>
+              <select id="genPillar" class="form-select">
+                <option value="" disabled selected>Select a pillar…</option>
+              </select>
+            </div>
+            <div>
+              <label for="genPostTemplate" class="block text-md font-medium text-neutral-lightest mb-1.5">2. CAPTIVATE Post Template</label>
+              <select id="genPostTemplate" class="form-select">
+                <option value="" disabled selected>Select a template…</option>
+                <option value="transformation_story">🔄 Transformation Story</option>
+                <option value="contrarian_take">⚡ Contrarian Take</option>
+                <option value="framework_formula">🎯 Framework Formula</option>
+              </select>
+            </div>
+            <div>
+              <label for="genHookStyle" class="block text-md font-medium text-neutral-lightest mb-1.5">3. Hook Style</label>
+              <select id="genHookStyle" class="form-select">
+                <option value="" disabled selected>Select style…</option>
+                <option value="question">Provocative Question</option>
+                <option value="bold_statement">Bold/Contrarian Statement</option>
+                <option value="statistic">Surprising Statistic</option>
+                <option value="story_teaser">Personal Story Teaser</option>
+                <option value="pain_point">Relatable Pain Point</option>
+              </select>
+            </div>
+            <div>
+              <label for="genTone" class="block text-md font-medium text-neutral-lightest mb-1.5">4. Post Tone</label>
+              <select id="genTone" class="form-select">
+                <option value="" disabled selected>Select tone…</option>
+                <option value="inspirational">Inspirational</option>
+                <option value="educational">Educational</option>
+                <option value="vulnerable">Vulnerable</option>
+                <option value="controversial">Controversial</option>
+                <option value="motivational">Motivational</option>
+                <option value="professional">Professional/Formal</option>
+              </select>
+            </div>
+            <div>
+              <label for="genIndustryFocus" class="block text-md font-medium text-neutral-lightest mb-1.5">5. Industry Focus</label>
+              <select id="genIndustryFocus" class="form-select">
+                <option value="" disabled selected>Select industry…</option>
+                <option value="oil_gas_energy_transition">Oil &amp; Gas and Energy Transition</option>
+                <option value="fmcg_supply_chain_innovation">FMCG and Supply Chain Innovation</option>
+                <option value="it_digital_transformation_services">IT and Digital Transformation Services</option>
+                <option value="manufacturing_4_0_automation">Manufacturing (Industry 4.0 &amp; Automation)</option>
+                <option value="cross_industry_digital_leadership">Cross-Industry Digital Leadership</option>
+                <option value="strategic_pmo_portfolio_management">Strategic PMO and Portfolio Management</option>
+              </select>
+            </div>
+            <div>
+              <label for="genPersonalContext" class="block text-md font-medium text-neutral-lightest mb-1.5">6. Personal Context / Specific Insight (Optional)</label>
+              <textarea id="genPersonalContext" class="form-textarea" placeholder="Add a brief anecdote or insight..."></textarea>
+            </div>
+            <div>
+              <label for="genCtaStyle" class="block text-md font-medium text-neutral-lightest mb-1.5">7. Call-to-Action (CTA) Style</label>
+              <select id="genCtaStyle" class="form-select">
+                <option value="" disabled selected>Select CTA…</option>
+                <option value="provocative_question">Provocative Question for Leaders</option>
+                <option value="invite_debate_specific_topic">Invitation to Debate a Specific Topic</option>
+                <option value="share_your_experience_challenge">Share Your Experience (with a challenge)</option>
+                <option value="connect_for_strategic_discussion">Connect for Strategic Discussion (specific)</option>
+                <option value="request_alternative_perspectives">Request Alternative Perspectives</option>
+                <option value="offer_follow_up_insight">Offer Follow-up Insight (teaser)</option>
+              </select>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:space-x-4 mt-10">
+              <button type="submit" id="generatePostBtn" class="btn btn-primary w-full sm:w-auto mb-3 sm:mb-0">
+                <i class="fas fa-brain mr-2.5" aria-hidden="true"></i>Generate Optimized Proposal
+              </button>
+              <button type="button" id="randomizeOptionsBtn" class="btn btn-secondary w-full sm:w-auto">
+                <i class="fas fa-dice mr-2.5" aria-hidden="true"></i>Randomize &amp; Fill
+              </button>
+            </div>
+            <div id="generationSpinner" class="spinner"></div>
+            <div id="apiErrorDisplay" class="mt-4 text-danger text-sm hidden p-3 bg-danger/10 border border-danger rounded-md"></div>
+          </form>
+        </div>
+        <div id="generatedPostArea" class="card mt-10 hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h3 class="subsection-title !mb-0">Generated Post Proposal</h3>
+            <button id="copyGeneratedPostButton" class="btn btn-accent btn-sm">
+              <i class="fas fa-copy mr-2" aria-hidden="true"></i>Copy Post Text
+            </button>
+          </div>
+          <div id="generatedPostContentWrapper" class="p-5 bg-secondary-dark rounded-lg border border-secondary-lighter min-h-[200px] whitespace-pre-wrap text-neutral-lightest leading-relaxed mb-4">
+            <p id="generatedPostContent" class="text-base"></p>
+          </div>
+          <div class="mt-3 mb-6 text-sm text-neutral">
+            Characters: <span id="generatedCharCount" class="font-semibold text-neutral-lightest">0</span>
+            / Words: <span id="generatedWordCount" class="font-semibold text-neutral-lightest">0</span>
+          </div>
+          <div id="visualPromptArea" class="mb-6">
+            <h4 class="text-md font-semibold mb-2 text-neutral-lightest">Suggested Visual Prompt (for Image AI):</h4>
+            <div id="visualPromptContent" class="p-3 bg-secondary-dark rounded-md border border-secondary-lighter text-accent-light font-mono text-sm whitespace-pre-wrap"></div>
+            <button id="copyVisualPromptButton" class="btn btn-secondary btn-sm text-xs mt-2 hidden">
+              <i class="fas fa-image mr-1" aria-hidden="true"></i>Copy Visual Prompt
+            </button>
+          </div>
+          <div class="mt-6 border-t border-secondary-light pt-6">
+            <h4 class="text-lg font-semibold mb-4 text-neutral-lightest">CAPTIVATE Analysis (Score: <span id="captivateScoreDisplay" class="text-primary-light font-bold">0/9</span>)</h4>
+            <div id="captivateBadgesDisplay" class="flex flex-wrap items-center mb-4"><!-- badges will be injected --></div>
+            <p class="text-xs text-neutral italic">Detected components are highlighted. Greyed out components are inactive.</p>
+          </div>
+          <div class="mt-6 border-t border-secondary-light pt-6">
+            <h4 class="text-md font-semibold mb-3 text-neutral-lightest">Suggested Hashtags (Click to copy):</h4>
+            <div id="aiSuggestedHashtagsDisplay" class="flex flex-wrap gap-2.5 mb-4"></div>
+          </div>
+          <div class="mt-6 border-t border-secondary-light pt-6">
+            <h4 class="text-md font-semibold mb-4 text-neutral-lightest">Performance Predictions:</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5 text-center">
+              <div class="p-4 bg-secondary-dark rounded-lg border border-secondary-lighter">
+                <div class="text-xl font-bold text-primary-light" id="simulatedViralPotential">--%</div>
+                <div class="text-xs text-neutral uppercase tracking-wider mt-1">Viral Potential</div>
+              </div>
+              <div class="p-4 bg-secondary-dark rounded-lg border border-secondary-lighter">
+                <div class="text-xl font-bold text-primary-light" id="simulatedEngagementRate">--%</div>
+                <div class="text-xs text-neutral uppercase tracking-wider mt-1">Engagement Rate</div>
+              </div>
+              <div class="p-4 bg-secondary-dark rounded-lg border border-secondary-lighter">
+                <div class="text-xl font-bold text-primary-light" id="simulatedAuthorityScore">--%</div>
+                <div class="text-xs text-neutral uppercase tracking-wider mt-1">Authority Score</div>
+              </div>
+              <div class="p-4 bg-secondary-dark rounded-lg border border-secondary-lighter">
+                <div class="text-xl font-bold text-primary-light" id="simulatedEstimatedReach">--</div>
+                <div class="text-xs text-neutral uppercase tracking-wider mt-1">Estimated Reach</div>
+              </div>
+            </div>
+          </div>
+          <button id="saveToKnowledgeBaseButton" class="btn btn-accent mt-10 w-full">
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>Save to Knowledge Base
+          </button>
+        </div>
+      </section>
+
+      <!-- CAPTIVATE ENGAGEMENT SUITE -->
+      <section id="captivate-engagement-suite" class="content-section">
+        <h2 class="section-title">CAPTIVATE Framework &amp; Engagement Suite</h2>
+        <div class="mb-12">
+          <h3 class="subsection-title"><i class="fas fa-star mr-3 text-captivate_i" aria-hidden="true"></i>The CAPTIVATE Framework</h3>
+          <p class="text-neutral-light mb-8 leading-relaxed">The 9 strategic components for LinkedIn content designed to go viral. Leverage these principles to craft posts that seize attention, resonate with your audience, and ignite meaningful engagement.</p>
+          <div id="captivateComponentsDisplay" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8"><!-- components injected here --></div>
+        </div>
+        <div>
+          <h3 class="subsection-title"><i class="fas fa-rocket mr-3 text-accent" aria-hidden="true"></i>Engagement Optimizer</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+            <div class="card">
+              <h4 class="text-xl font-semibold mb-4 text-neutral-lightest"><i class="fas fa-stopwatch mr-2" aria-hidden="true"></i>Timing Optimizer</h4>
+              <p class="text-neutral-light mb-4 leading-relaxed">Post when your audience is most active to maximize initial visibility and algorithmic favor.</p>
+              <ul class="list-disc list-inside text-neutral-light space-y-2 text-sm">
+                <li><strong>Optimal Days:</strong> Tuesday, Wednesday, Thursday.</li>
+                <li><strong>Optimal Times:</strong> 8:00–10:00 AM, 12:00–2:00 PM, 5:00–7:00 PM (audience local time).</li>
+                <li>Review LinkedIn Analytics for audience-specific data.</li>
+                <li>Test different time slots to refine your strategy.</li>
+              </ul>
+              <button id="suggestTimeBtn" class="btn btn-secondary mt-6 w-full sm:w-auto">
+                <i class="fas fa-clock mr-2" aria-hidden="true"></i>Suggest Optimal Time
+              </button>
+              <p id="suggestedTimeText" class="text-primary-light mt-4 font-semibold text-base"></p>
+            </div>
+            <div class="card">
+              <h4 class="text-xl font-semibold mb-4 text-neutral-lightest"><i class="fas fa-comments mr-2" aria-hidden="true"></i>Engagement Mechanics</h4>
+              <p class="text-neutral-light mb-4 leading-relaxed">Proven strategies to stimulate, manage, and elevate comment quality.</p>
+              <div class="space-y-5">
+                <div>
+                  <h5 class="text-md font-semibold mb-2 text-neutral-lightest">First 15 Minutes Response Protocol:</h5>
+                  <ul class="list-disc list-inside text-neutral-light space-y-1.5 text-sm">
+                    <li>Instantly like the first 5–10 comments.</li>
+                    <li>Respond swiftly with a follow-up question.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 class="text-md font-semibold mb-2 text-neutral-lightest">AAQA Method for High-Quality Comments:</h5>
+                  <ul class="list-disc list-inside text-neutral-light space-y-1.5 text-sm">
+                    <li><strong>Acknowledgment:</strong> address the commenter.</li>
+                    <li><strong>Addition:</strong> offer new insight.</li>
+                    <li><strong>Question:</strong> keep the conversation flowing.</li>
+                    <li><strong>Appreciation:</strong> thank them for contributing.</li>
+                  </ul>
+                </div>
+                <div>
+                  <h5 class="text-md font-semibold mb-2 text-neutral-lightest">Engagement Plan (24–48 hours):</h5>
+                  <ul class="list-disc list-inside text-neutral-light space-y-1.5 text-sm">
+                    <li>Maintain consistent responses.</li>
+                    <li>Consider highlighting exceptional comments.</li>
+                    <li>Analyze discussions for future content ideas.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="messageModal" class="modal">
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-4">
+        <h4 id="modalTitle" class="text-lg font-semibold text-neutral-lightest">Notification</h4>
+        <button class="close-button" onclick="closeModal()">&times;</button>
+      </div>
+      <p id="modalMessageText" class="text-neutral-light mb-6"></p>
+      <div class="text-right">
+        <button class="btn btn-primary" onclick="closeModal()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Scripts -->
+  <script type="module" defer>
+    // Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Firebase configuration (keys ideally loaded from environment)
+    // WARNING: API keys should never be hardcoded in production. Use environment variables or secure server-side endpoints.
+    const firebaseConfigFromHTML = {
+      apiKey: "AIzaSyApYeny8pHbj_3WPohZCQh0avErdVfa_PA",
+      authDomain: "linkedin-agent-andrei.firebaseapp.com",
+      projectId: "linkedin-agent-andrei",
+      storageBucket: "linkedin-agent-andrei.appspot.com",
+      messagingSenderId: "920054512792",
+      appId: "1:920054512792:web:58137496bd7d02d2e564ed"
+    };
+    const firebaseConfig = typeof __firebase_config !== "undefined" ? JSON.parse(__firebase_config) : firebaseConfigFromHTML;
+    const appId = typeof __app_id !== "undefined" ? __app_id : firebaseConfig.projectId || "default-app-id";
+
+    let app, auth, db, userId = null;
+
+    function initCaptivateUI() {
+      const captivateComponentsDisplay = document.getElementById("captivateComponentsDisplay");
+      if (
+        captivateComponentsDisplay &&
+        window.tailwindConfig &&
+        tailwind.config &&
+        tailwind.config.theme &&
+        tailwind.config.theme.extend &&
+        tailwind.config.theme.extend.colors
+      ) {
+        const twColors = tailwind.config.theme.extend.colors;
+        captivateFramework.forEach((comp) => {
+          const card = document.createElement("div");
+          card.className = `captivate-component-card captivate-${comp.id.replace("_", "-")}-card`;
+          const titleColor = (twColors[comp.color] && twColors[comp.color].DEFAULT) || twColors[comp.color] || "#fff";
+          card.innerHTML = `<h4 style="color: ${titleColor};">${comp.id.replace("_auth"," (Authenticity)").replace("_tribal"," (Tribal)").replace("_action"," (Action)").replace("_timing"," (Timing)")}. ${comp.name}</h4><p>${comp.description}</p>`;
+          captivateComponentsDisplay.appendChild(card);
+        });
+      }
+    }
+
+    function waitForTailwindConfig(retries = 5) {
+      if (window.tailwindConfig || (tailwind && tailwind.config)) {
+        initCaptivateUI();
+        return;
+      }
+      if (retries > 0) {
+        setTimeout(() => waitForTailwindConfig(retries - 1), 200);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+      } catch (error) {
+        console.error("Firebase initialization error:", error);
+        showModalMessage("Critical Firebase services initialization error.", "error");
+      }
+
+      const userIdDisplay = document.getElementById("userIdDisplay");
+      const appIdDisplay = document.getElementById("appIdDisplay");
+      if (appIdDisplay) appIdDisplay.textContent = appId;
+
+      // remaining initialization logic ...
+
+      waitForTailwindConfig();
+    });
+
+    // Gemini API key (for demo; production should store securely)
+    // WARNING: Do not commit real API keys. Use environment variables.
+    const GEMINI_API_KEY = "AIzaSyA2cksd5Jpo24c4uAUBSnvghjSnM_b2j2U";
+
+    let currentGeneratedPostData = null;
+    // Rest of JS logic: event handlers, AI calls etc.
+
+    // Ensure visual prompt area is populated when element exists
+    function updateVisualPrompt(text) {
+      if (visualPromptContentEl) {
+        visualPromptContentEl.textContent = text;
+      }
+    }
+  </script>
+</body>
+</html>
